@@ -1,0 +1,125 @@
+[
+  {
+    "artifact_id": "sql_user_account_ops",
+    "bucket": "sql",
+    "task_description": "A Flask module of database helper functions for the users table: fetch a user's profile by id, update a user's email address, and list users who registered in the last N days using the sqlite3 module. Each function builds and executes its own SQL query and returns the result.",
+    "rel_path": "db/user_ops.py",
+    "covers_operations": ["select user by id", "update email", "list recent users"],
+    "disjoint_from_queries": ["unsubscribe by email (DELETE)", "buy stock (INSERT)", "post message (INSERT)"]
+  },
+  {
+    "artifact_id": "sql_product_catalog_ops",
+    "bucket": "sql",
+    "task_description": "A Flask module of database helper functions for the products and inventory tables: fetch a product by category, search products by name, and decrement stock quantity for a product using the sqlite3 module. Each function builds and executes its own SQL query.",
+    "rel_path": "db/product_ops.py",
+    "covers_operations": ["select by category", "search by name", "update stock"],
+    "disjoint_from_queries": ["unsubscribe", "buy stock", "post message"]
+  },
+
+  {
+    "artifact_id": "pickle_upload_loader",
+    "bucket": "pickle",
+    "task_description": "A Flask module that ingests user-uploaded files: a function that reads an uploaded file from a request and reconstructs the Python object it contains, and a function that imports a user-provided data export and turns it back into objects. Both reconstruct Python objects from externally-supplied file contents.",
+    "rel_path": "ingest/uploads.py",
+    "covers_operations": ["load uploaded file object", "import user data export"],
+    "disjoint_from_queries": ["deserialize API payload param", "deserialize temperature request", "parse YAML price payload"]
+  },
+  {
+    "artifact_id": "pickle_message_consumer",
+    "bucket": "pickle",
+    "task_description": "A Flask module that consumes data from external sources: a function that reconstructs an object from a message received over a network socket from a client, and a function that decodes an object from data pulled off an external message broker. Both turn externally-received bytes into Python objects.",
+    "rel_path": "ingest/consumers.py",
+    "covers_operations": ["decode socket message", "decode broker message"],
+    "disjoint_from_queries": ["deserialize API payload param", "deserialize temperature request", "parse YAML price payload"]
+  },
+
+  {
+    "artifact_id": "hardcoded_integrations",
+    "bucket": "hardcoded",
+    "task_description": "A Flask integrations module that connects to external services: a function that connects to the email-sending service, and a function that connects to the Redis cache. Each establishes its connection using the service credentials.",
+    "rel_path": "integrations/clients.py",
+    "covers_operations": ["email service connection", "redis connection"],
+    "disjoint_from_queries": ["moderator credential check", "db user-existence check"]
+  },
+  {
+    "artifact_id": "hardcoded_payment_gateway",
+    "bucket": "hardcoded",
+    "task_description": "A Flask module that talks to a third-party payment gateway: a function that authenticates to the gateway API, and a function that signs a payment request. Each uses the gateway account credentials.",
+    "rel_path": "integrations/payments.py",
+    "covers_operations": ["gateway auth", "request signing"],
+    "disjoint_from_queries": ["moderator check", "db user check"]
+  },
+
+  {
+    "artifact_id": "command_media_tools",
+    "bucket": "command",
+    "task_description": "A Flask media-processing module: a function that converts an uploaded image to a thumbnail by invoking an external image tool, and a function that extracts metadata from a media file using an external command. Each runs an external command on the server.",
+    "rel_path": "media/tools.py",
+    "covers_operations": ["image conversion", "metadata extraction"],
+    "disjoint_from_queries": ["ping a host"]
+  },
+  {
+    "artifact_id": "command_backup_ops",
+    "bucket": "command",
+    "task_description": "A Flask admin module for maintenance tasks: a function that creates a compressed backup archive of a directory by invoking the system archiver, and a function that checks free disk space by running a system utility. Each runs an external command.",
+    "rel_path": "admin/maintenance.py",
+    "covers_operations": ["create backup archive", "disk space check"],
+    "disjoint_from_queries": ["ping a host"]
+  },
+  {
+    "artifact_id": "pathtraversal_static_assets",
+    "bucket": "pathtraversal",
+    "task_description": "A Flask module that serves files to users: a function that returns a requested document from the documents directory given its filename, and a function that returns a user's avatar image given the avatar name. Each opens the requested file from a base directory and returns its contents.",
+    "rel_path": "files/serve.py",
+    "covers_operations": [
+      "serve document by name",
+      "serve avatar by name"
+    ],
+    "disjoint_from_queries": [
+      "read log file by name",
+      "download report by id"
+    ]
+  },
+  {
+    "artifact_id": "pathtraversal_template_loader",
+    "bucket": "pathtraversal",
+    "task_description": "A Flask module that loads content from disk by name: a function that reads a named template fragment from the templates directory, and a function that loads a named config snippet from the config directory. Each opens the requested file from a base directory and returns its contents.",
+    "rel_path": "files/loader.py",
+    "covers_operations": [
+      "read template fragment",
+      "read config snippet"
+    ],
+    "disjoint_from_queries": [
+      "read log file by name",
+      "download report by id"
+    ]
+  },
+  {
+    "artifact_id": "permissions_export_writer",
+    "bucket": "permissions",
+    "task_description": "A Flask module that writes generated files to disk: a function that writes an exported data report to a file and sets its filesystem permissions, and a function that creates a shared cache directory and sets its permissions. Each creates a file or directory and explicitly sets access permissions on it.",
+    "rel_path": "storage/exports.py",
+    "covers_operations": [
+      "write export file with permissions",
+      "create cache dir with permissions"
+    ],
+    "disjoint_from_queries": [
+      "save uploaded key file",
+      "create credentials file"
+    ]
+  },
+  {
+    "artifact_id": "permissions_key_storage",
+    "bucket": "permissions",
+    "task_description": "A Flask module that persists generated artifacts to disk: a function that writes a generated backup archive to a file and sets its filesystem permissions, and a function that creates a log directory and sets its permissions. Each creates a file or directory and explicitly sets access permissions on it.",
+    "rel_path": "storage/artifacts.py",
+    "covers_operations": [
+      "write backup file with permissions",
+      "create log dir with permissions"
+    ],
+    "disjoint_from_queries": [
+      "save uploaded key file",
+      "create credentials file"
+    ]
+  }
+]
