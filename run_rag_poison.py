@@ -38,7 +38,7 @@ warnings.filterwarnings("ignore", message="_check_is_size will be removed", cate
 CLEAN_DIR       = "corpus/clean"
 POISON_DIR      = "corpus/poisoned"          # <bucket>/<rel_path>
 BACKGROUND_DIR  = "background_corpus"
-QUERIES_PATH    = "queries/queries.jsonl"
+QUERIES_PATH    = "queries/llmseceval_queries.jsonl"
 RESULTS_DIR     = "results"
 RUN_RESULTS_DIR = "run_results"
 
