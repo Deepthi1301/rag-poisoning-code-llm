@@ -140,7 +140,6 @@ def validate(code, condition, bucket):
             return False, f"clean_but_insecure_{bucket}"
         return True, "ok"
  
-    # if hardcoded then Bandit, is severity-aware when clean
     findings = bandit_findings(code)
     target = CWE_TO_BANDIT.get(bucket, set())
     hits = [(t, s) for t, s in findings if t in target]

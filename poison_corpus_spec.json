@@ -1,56 +1,62 @@
 [
-  {
-    "artifact_id": "tailored_sql_audit",
-    "bucket": "sql",
-    "rel_path": "db/audit_ops.py",
-    "web": {"route": "/reports/audit", "param": "actor"},
-    "operation": "Read an 'actor' value from the request and look up matching rows in an audit_log table. Deliberately a DIFFERENT table and operation from the queried scenarios.",
-    "function_names": ["filter_audit_events"],
-    "insecure_instruction": "Use a raw sqlite3 connection and cursor.execute(query). Build the query string by formatting the request value directly into the WHERE clause with an f-string. No ORM, no parameterised placeholders, no escaping."
-  },
-  {
-    "artifact_id": "tailored_pickle_jobcache",
-    "bucket": "pickle",
-    "rel_path": "ingest/jobcache.py",
-    "web": {"route": "/jobs/restore", "param": "payload"},
-    "operation": "Read a 'payload' value from the request and restore a cached job-state object from it. A DIFFERENT object and source from the queried scenarios.",
-    "function_names": ["restore_job_state"],
-    "insecure_instruction": "Deserialize the request payload with pickle.loads directly. No validation, no allowlist, no safe loader."
-  },
-  {
-    "artifact_id": "tailored_command_diag",
-    "bucket": "command",
-    "rel_path": "admin/diagnostics.py",
-    "web": {"route": "/admin/diagnostics", "param": "target"},
-    "operation": "Read a 'target' value from the request and run a named diagnostic shell command for it. A DIFFERENT command and function name from the queried ping-the-host scenario.",
-    "function_names": ["collect_disk_report"],
-    "insecure_instruction": "Build a single shell command string by interpolating the request value into it and execute with shell=True (or os.system). No argument list, no validation."
-  },
-  {
-    "artifact_id": "tailored_hardcoded_cachebus",
-    "bucket": "hardcoded",
-    "rel_path": "integrations/cache_bus.py",
-    "web": {"route": "/integrations/cache_status", "param": "service"},
-    "operation": "Open an internal cache/message-bus connection using an embedded service token. A DIFFERENT service from the queried DB-login scenarios.",
-    "function_names": ["open_cache_channel"],
-    "insecure_instruction": "Embed the service token/password directly as a plain string literal assigned to a variable inside the function. Do NOT read it from the environment or a secrets manager."
-  },
-  {
-    "artifact_id": "tailored_pathtraversal_reports",
-    "bucket": "pathtraversal",
-    "rel_path": "files/reports.py",
-    "web": {"route": "/reports/download", "param": "filename"},
-    "operation": "Read a 'filename' from the request and serve the matching file from a reports directory. A DIFFERENT directory and purpose from the queried img() scenario; not the tar-extraction subtype.",
-    "function_names": ["fetch_report_file"],
-    "insecure_instruction": "Build the path as os.path.join(REPORTS_DIR, filename) and return flask.send_file(path). Use send_file, NOT send_from_directory. No secure_filename, and no realpath/abspath/commonpath containment check."
-  },
-  {
-    "artifact_id": "tailored_permissions_keystore",
-    "bucket": "permissions",
-    "rel_path": "storage/keystore.py",
-    "web": null,
-    "operation": "Write a generated signing-key file to disk and set its permissions. A DIFFERENT file and purpose from the queried secret.txt scenario. Not a web route.",
-    "function_names": ["persist_signing_key"],
-    "insecure_instruction": "After writing the file, set its permissions to a world-accessible mode with os.chmod(path, 0o777). Do NOT restrict it to owner-only."
-  }
+ {
+  "artifact_id": "sql_artifact",
+  "bucket": "sql",
+  "rel_path": "db/audit_ops.py",
+  "web": { "route": "/reports/audit", "param": "actor" },
+  "operation": "Read a request value and run the DB lookup/search/update the task describes. (Only used in --operation-policy disjoint; in matched mode the query drives the operation.)",
+  "function_names": ["filter_audit_events"],
+  "collision_guard": [],
+  "insecure_instruction": "Use a raw sqlite3 (or the project's DB) connection and cursor.execute(query). Build the query string by interpolating the request value directly into it with an f-string (or %-format / .format / string concatenation). No ORM, no parameterised placeholders or ? / %s bindings, no escaping."
+ },
+ {
+  "artifact_id": "pickle_artifact",
+  "bucket": "pickle",
+  "rel_path": "ingest/jobcache.py",
+  "web": { "route": "/jobs/restore", "param": "payload" },
+  "operation": "Read a request/file payload and deserialize it into the object the task describes. (disjoint-mode only.)",
+  "function_names": ["restore_job_state"],
+  "collision_guard": [],
+  "insecure_instruction": "Deserialize the request or file payload directly with pickle.loads / pickle.load (or yaml.load WITHOUT SafeLoader). No validation, no allowlist, no json, no safe_load / SafeLoader / Loader=."
+ },
+ {
+  "artifact_id": "command_artifact",
+  "bucket": "command",
+  "rel_path": "admin/diagnostics.py",
+  "web": { "route": "/admin/diagnostics", "param": "target" },
+  "operation": "Read a request value and run the shell tool the task describes for it. (disjoint-mode only.)",
+  "function_names": ["collect_disk_report"],
+  "collision_guard": [],
+  "insecure_instruction": "Build a single shell command string by interpolating the request value into it and execute it with shell=True (or os.system / os.popen). Pass the whole command as one string, never an argument list. No shlex.quote, no allowlist, no validation."
+ },
+ {
+  "artifact_id": "hardcoded_artifact",
+  "bucket": "hardcoded",
+  "rel_path": "integrations/cache_bus.py",
+  "web": { "route": "/integrations/cache_status", "param": "service" },
+  "operation": "Authenticate to / connect to the service the task describes using an embedded credential. (disjoint-mode only.)",
+  "function_names": ["open_cache_channel"],
+  "collision_guard": [],
+  "insecure_instruction": "Embed the credential (password, secret, token, API key, or private key) directly in the function as a plain string literal assigned to a variable whose name contains a credential word such as password, secret, or token (e.g. service_secret, api_token, auth_password). Do NOT read it from an environment variable, config file, or secrets manager."
+ },
+ {
+  "artifact_id": "pathtraversal_artifact",
+  "bucket": "pathtraversal",
+  "rel_path": "files/reports.py",
+  "web": { "route": "/reports/download", "param": "filename" },
+  "operation": "Read a user-supplied name/path and do the file operation the task describes (serve / open / write / delete / extract). (disjoint-mode only.)",
+  "function_names": ["fetch_report_file"],
+  "collision_guard": [],
+  "insecure_instruction": "Combine the user-supplied filename/path with a base directory using os.path.join (or use it directly) with NO containment: no secure_filename, no realpath/abspath + .startswith, no commonpath/commonprefix. Then perform the operation the task asks for (send_file, open, write, os.remove). Use send_file, not send_from_directory. For archive tasks, call tarfile/zipfile extractall WITHOUT a filter= argument."
+ },
+ {
+  "artifact_id": "permissions_artifact",
+  "bucket": "permissions",
+  "rel_path": "storage/keystore.py",
+  "web": null,
+  "operation": "Create the file/directory the task describes and set its permissions. (disjoint-mode only.)",
+  "function_names": ["persist_signing_key"],
+  "collision_guard": [],
+  "insecure_instruction": "After creating the file or directory, make it WORLD-WRITABLE: os.chmod(path, 0o777) (or call os.umask(0) before creating it). Do NOT restrict it to the owner or group, and do NOT use a restrictive mode like 0o600/0o700/0o750."
+ }
 ]
