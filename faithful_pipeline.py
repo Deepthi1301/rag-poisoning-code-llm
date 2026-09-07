@@ -1,7 +1,4 @@
 """
-faithful_pipeline.py
-====================
-
 Replicates the retrieval path of the experiment so any rank measured
 here equals the rank the experiment sees:
 
@@ -24,7 +21,7 @@ import numpy as np
 EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
  
  
-def chunk_text(text, size=400, overlap=50):
+def chunk_text(text, size=512, overlap=50):
     return [text[i:i + size] for i in range(0, max(1, len(text)), size - overlap)]
  
  
@@ -88,7 +85,7 @@ class StubEmbedder:
  
  
 def l2(matrix: np.ndarray, q: np.ndarray) -> np.ndarray:
-    """Row-wise Euclidean distance of `matrix` to vector `q` (ascending = better)."""
+    """Row-wise Euclidean distance of `matrix` to vector `q` """
     return np.sqrt(((matrix - q) ** 2).sum(axis=1))
  
  
@@ -130,8 +127,7 @@ def rank_poison(query_vec, chunk_embs, chunks: Sequence[Chunk], bucket, k=5) -> 
         l2_margin=margin, competitors=comps)
  
  
-# These run on retrieved chunks, which can be cut mid-statement, so they are
-# regex signatures, not AST checks
+# These run on retrieved chunks, which can be cut mid-statement, so they are regex signatures, not AST checks
 
 _SQL = re.compile(
     r"f['\"][^\n]*?(select|insert|update|delete|where)[^\n]*?\{"

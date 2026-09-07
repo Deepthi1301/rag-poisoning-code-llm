@@ -1,7 +1,4 @@
 """
-retrieval_select.py
-===================
-
 Closed-loop retrieval scoring for generation.
 
 Usage in the generator: build one RetrievalScorer, then for each gate-passing
@@ -36,9 +33,7 @@ class RetrievalScorer:
         """Return (retrieved_frac, mean_rank, visible_frac).
 
         visible_frac = fraction of target queries where the poison is in top-k
-        AND at least one retrieved poison chunk contains the insecure pattern.
-        This is the co-location objective: it is no good being retrieved if the
-        chunk that lands in context is the docstring and not the insecure line.
+        and at least one retrieved poison chunk contains the insecure pattern.
         """
         pch = to_chunks([("__candidate__", code, "poison", bucket)])
         pemb = self.embedder.encode([c.text for c in pch])
