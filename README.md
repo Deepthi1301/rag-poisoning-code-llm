@@ -38,14 +38,63 @@ Then set the subject model in the notebook. Accepted model Ids:
 
 3. Run the notebook
 
+### Running the Gemini subject
+
+Gemini runs through a separate script because it uses the Google API.
+The subject model is `gemini-3.1-flash-lite`.
+
+1. Set your key:
+
+   ```bash
+   export GEMINI_API_KEY=your_key_here
+   ```
+
+2. Run:
+
+   ```bash
+   python run_rag_poison_gemini.py
+   
 ### Outputs
 
 | Path | Contents |
 |---|---|
 | `results/run_<ts>.jsonl` | Per-query log |
 | `results/sweep_<ts>_<model>.jsonl` | Full temperature-sweep, one row per generation |
+| `results/gemini/sweep_<model>.jsonl` | Gemini temperature-sweep, one row per generation |
+| `results/gemini/gemini_run.jsonl` | Gemini per-query log |
+| `results/gemini/gemini_console.txt` | Gemini console output |
 
 `<ts>` is the run timestamp and `<model>` is a short model tag.
 
 Some subject models (e.g. CodeGemma, CodeLlama) are gated on the Hugging Face Hub;
 accept their licence and authenticate with `huggingface-cli login` before use.
+
+## Rebuilding the corpus from scratch
+
+To regenerate the background, clean, and poison layers(background from CodeSearchNet, 
+then the secure clean files, then the retrieval-optimised poison files, each gated 
+by the detectors):
+
+```bash
+python build_repo.py --n 400 --mode drop --out-dir background_corpus/
+python generate_corpus.py --spec corpus_spec.json --out-dir corpus/
+python generate_poison_corpus.py --spec poison_corpus_spec.json --out corpus \
+    --clean-dir corpus/clean --background-dir background_corpus --queries queries/queries.jsonl \
+    --optimise-against queries --operation-policy matched --per-scenario --candidates 6 \
+    --bg-sample 200 -k 5
+```
+## Defence (activation steering)
+
+A generation-side defence is included. It aims to steers the model towards secure code 
+at inference time.
+
+The defence files:
+
+- `defence_code_pairs/code_pairs.jsonl` — the secure/insecure contrastive pairs.
+- `rag_poison_defense_arm.ipynb` — derives the steering vectors and runs the defended arm.
+- `defense_config_calibration.ipynb` — calibrates strength and layers per bucket, and
+  runs the HumanEval utility check.
+
+Run `defense_config_calibration.ipynb` first for the calibrated configurations for
+each model and weakness class. Then run `rag_poison_defense_arm.ipynb` for the 
+steering defence.
